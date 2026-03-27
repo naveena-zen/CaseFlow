@@ -1,0 +1,25 @@
+CASE SUMMARY
+
+Case Title  : Motor Accident Compensation
+Client Name : Raj Mohan
+Date        : 27-03-2026
+
+Incident Details:
+- Date of Accident : 15-01-2026
+- Location         : NH-44, Near Krishnagiri
+- Vehicle No       : TN-09-AB-1234
+
+Injuries Sustained:
+- Fractured right leg
+- Head injury (minor)
+- Hospitalized for 12 days
+
+Claim Details:
+- Medical Expenses  : Rs. 85,000
+- Loss of Income    : Rs. 45,000
+- Total Claim       : Rs. 1,30,000
+
+Status: Notice sent to insurance company.
+Awaiting response within 30 days.
+
+Prepared by: Adv. Ravi Kumar
