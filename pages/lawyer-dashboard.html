@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawyer Dashboard – CaseFlow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    body { background: #f0f4f8; }
+    .navbar { background: linear-gradient(135deg, #1e3c72, #2a5298); }
+    .stat-card { border: none; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform .2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-icon { font-size: 2rem; }
+    .case-table { background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; }
+    .case-table table { margin: 0; }
+    .btn-view { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: none; font-size: .85rem; }
+    .btn-view:hover { opacity: .9; color: #fff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand fw-bold fs-4">⚖️ CaseFlow</span>
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-white small" id="welcomeMsg"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold mb-0">My Cases</h4>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCaseModal">
+        <i class="bi bi-plus-circle me-1"></i> New Case
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4" id="statsRow">
+      <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-icon text-primary">📁</div>
+          <div class="fs-3 fw-bold" id="statTotal">–</div>
+          <div class="text-muted small">Total Cases</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-icon text-warning">🟡</div>
+          <div class="fs-3 fw-bold" id="statOpen">–</div>
+          <div class="text-muted small">Open</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-icon text-primary">🔵</div>
+          <div class="fs-3 fw-bold" id="statActive">–</div>
+          <div class="text-muted small">Active</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+          <div class="stat-icon text-secondary">⚫</div>
+          <div class="fs-3 fw-bold" id="statClosed">–</div>
+          <div class="text-muted small">Closed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases Table -->
+    <div class="case-table">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Case Title</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="casesBody">
+          <tr><td colspan="5" class="text-center text-muted py-4">Loading cases...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- New Case Modal -->
+  <div class="modal fade" id="newCaseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Create New Case</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newCaseForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Case Title</label>
+              <input type="text" id="caseTitle" class="form-control" placeholder="e.g. Smith vs. Johnson" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Description</label>
+              <textarea id="caseDescription" class="form-control" rows="3" placeholder="Brief description..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Assign Client</label>
+              <select id="clientSelect" class="form-select" required>
+                <option value="">Loading clients...</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Create Case</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    if (!requireAuth('lawyer')) throw new Error('Not authorized');
+    document.getElementById('welcomeMsg').textContent = 'Welcome, ' + getUser().name;
+
+    async function loadCases() {
+      const res = await fetch('/api/cases', { headers: authHeaders() });
+      const cases = await res.json();
+      const total = cases.length;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statOpen').textContent = cases.filter(c => c.status === 'Open').length;
+      document.getElementById('statActive').textContent = cases.filter(c => c.status === 'Active').length;
+      document.getElementById('statClosed').textContent = cases.filter(c => c.status === 'Closed').length;
+      const tbody = document.getElementById('casesBody');
+      if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No cases yet. Create your first case!</td></tr>';
+        return;
+      }
+      tbody.innerHTML = cases.map(c => `
+        <tr>
+          <td class="fw-semibold">${c.title}</td>
+          <td>${c.clientId ? c.clientId.name : '—'}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+          <td>
+            <a href="/pages/lawyer-case-detail.html?id=${c._id}" class="btn btn-view btn-sm me-1"><i class="bi bi-eye me-1"></i>View</a>
+            ${c.status === 'Closed' ? `<button class="btn btn-sm" style="background-color: red; color: white; border-color: red;" onclick="deleteCase('${c._id}')">Delete</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function deleteCase(id) {
+      if (!confirm('Are you sure you want to delete this closed case?')) return;
+      try {
+        const res = await fetch(`/api/cases/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Case deleted successfully');
+          loadCases();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function loadClients() {
+      const res = await fetch('/api/auth/clients', { headers: authHeaders() });
+      const clients = await res.json();
+      const sel = document.getElementById('clientSelect');
+      sel.innerHTML = clients.map(c => `<option value="${c._id}">${c.name} (${c.email})</option>`).join('');
+    }
+
+    document.getElementById('newCaseModal').addEventListener('show.bs.modal', loadClients);
+
+    document.getElementById('newCaseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('caseTitle').value.trim();
+      const description = document.getElementById('caseDescription').value.trim();
+      const clientId = document.getElementById('clientSelect').value;
+      try {
+        const res = await fetch('/api/cases', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ title, description, clientId })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || 'Failed to create case');
+        bootstrap.Modal.getInstance(document.getElementById('newCaseModal')).hide();
+        document.getElementById('newCaseForm').reset();
+        loadCases();
+      } catch (err) {
+        alert('Server error. Please try again.');
+      }
+    });
+
+    loadCases();
+  </script>
+</body>
+</html>
