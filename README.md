@@ -130,15 +130,5 @@ The database consists of the following four primary collections:
 
 ---
 
-## 📸 Screenshots
-
-*(Add your screenshots here)*
-
-- **Lawyer Dashboard:** `![Dashboard Screenshot](path/to/img)`
-- **Case Details View:** `![Case Details](path/to/img)`
-- **Client Interface:** `![Client View](path/to/img)`
-
----
-
 ## 📄 License
 This project is licensed under the **MIT License**.
