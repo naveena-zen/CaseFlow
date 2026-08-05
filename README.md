@@ -29,7 +29,7 @@
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 lextrack/
