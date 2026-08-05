@@ -4,7 +4,7 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
 
-## 📖 Description
+## Description
 **CaseFlow** is a streamlined, full-stack Legal Case Management Platform designed to help law firms and independent lawyers seamlessly manage their cases, clients, documents, and upcoming deadlines. The platform offers dedicated portals for both lawyers and clients, ensuring transparency and efficient communication.
 
 ---
