@@ -9,7 +9,7 @@
 
 ---
 
-## ✨ Features
+## Features
 - **Role-Based Authentication:** Secure login system differentiating between `lawyer` and `client` accounts with role-specific access control.
 - **Case Management:** Lawyers can create, update, and close legal cases. Clients can view their assigned cases and track their status.
 - **Document Management:** Securely upload, download, and store case-related documents and legal files.
