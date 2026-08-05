@@ -17,7 +17,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Technology | Description |
 |-----------|------------|-------------|
