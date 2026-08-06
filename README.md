@@ -100,7 +100,7 @@ Upon starting the server for the first time, sample demo data is automatically s
 
 ---
 
-## 🔌 API Endpoints Reference
+## API Endpoints Reference
 
 | Method | Route | Description | Auth Required |
 |--------|-------|-------------|---------------|
