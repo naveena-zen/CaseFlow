@@ -89,7 +89,7 @@ Follow these steps to get the completely functional platform running on your loc
 
 ---
 
-## 🔑 Demo Login Credentials
+## Demo Login Credentials
 
 Upon starting the server for the first time, sample demo data is automatically seeded. Use the following to log in:
 
