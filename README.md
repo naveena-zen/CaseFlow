@@ -50,7 +50,7 @@ lextrack/
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 Follow these steps to get the completely functional platform running on your local machine:
 
