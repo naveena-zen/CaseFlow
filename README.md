@@ -120,7 +120,7 @@ Upon starting the server for the first time, sample demo data is automatically s
 
 ---
 
-## 🗄️ MongoDB Collections
+## MongoDB Collections
 
 The database consists of the following four primary collections:
 1. **`users`** — Stores lawyer and client accounts with hashed passwords.
