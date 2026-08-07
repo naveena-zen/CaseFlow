@@ -33,7 +33,7 @@ Follow these steps to get the completely functional platform running on your loc
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/naveena-zen/CaseFlow>
    cd CaseFlow
    ```
 
