@@ -66,26 +66,6 @@ Follow these steps to get the completely functional platform running on your loc
    
 ---
 
-## API Endpoints Reference
-
-| Method | Route | Description | Auth Required |
-|--------|-------|-------------|---------------|
-| `POST` | `/api/auth/register` | Register a new user account | No |
-| `POST` | `/api/auth/login` | Log in and receive JWT token | No |
-| `GET` | `/api/auth/clients` | Get a list of all clients | Lawyer Only |
-| `GET` | `/api/cases` | Get cases for the logged-in user | Yes |
-| `GET` | `/api/cases/:id` | Get details for a specific case | Yes |
-| `POST` | `/api/cases` | Create a new case file | Lawyer Only |
-| `PATCH`| `/api/cases/:id/status`| Update status (Open/Active/Closed)| Lawyer Only |
-| `DELETE`| `/api/cases/:id` | Delete a closed case | Lawyer Only |
-| `POST` | `/api/documents/upload/:caseId` | Upload a document to a case | Yes |
-| `GET` | `/api/documents/:caseId` | List documents for a case | Yes |
-| `GET` | `/api/documents/download/:docId` | Download a document file | Yes |
-| `POST` | `/api/deadlines/:caseId` | Add a deadline to a case | Lawyer Only |
-| `GET` | `/api/deadlines/:caseId` | Get all deadlines for a case | Yes |
-
----
-
 ## MongoDB Collections
 
 The database consists of the following four primary collections:
