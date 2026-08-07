@@ -63,18 +63,7 @@ Follow these steps to get the completely functional platform running on your loc
    lextrack/frontend/index.html
    ```
    *(Alternatively, simply navigate to `http://localhost:5000`)*
-
----
-
-## Demo Login Credentials
-
-Upon starting the server for the first time, sample demo data is automatically seeded. Use the following to log in:
-
-| Role | Email | Password |
-|------|-------|----------|
-| **Lawyer** | `lawyer@lextrack.com` | `password123` |
-| **Client** | `client@lextrack.com` | `password123` |
-
+   
 ---
 
 ## API Endpoints Reference
