@@ -27,29 +27,6 @@
 | **Auth & Security** | JWT, bcryptjs | JSON Web Tokens & password hashing |
 | **Storage** | Multer | Local filesystem file uploads |
 
----
-
-## Folder Structure
-
-```text
-lextrack/
-├── backend/
-│   ├── config/db.js
-│   ├── middleware/auth.js
-│   ├── models/ (User, Case, Document, Deadline)
-│   ├── routes/ (auth, cases, documents, deadlines)
-│   ├── uploads/
-│   ├── .env
-│   ├── package.json
-│   └── server.js
-└── frontend/
-    ├── pages/
-    ├── app.js
-    └── index.html
-```
-
----
-
 ## Setup & Installation
 
 Follow these steps to get the completely functional platform running on your local machine:
