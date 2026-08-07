@@ -73,8 +73,3 @@ The database consists of the following four primary collections:
 2. **`cases`** — Stores legal case details, status, and references to the respective lawyer and client.
 3. **`documents`** — Stores metadata and filesystem paths for uploaded files mapped to a specific case.
 4. **`deadlines`** — Stores critical due dates mapped to a specific case.
-
----
-
-## 📄 License
-This project is licensed under the **MIT License**.
