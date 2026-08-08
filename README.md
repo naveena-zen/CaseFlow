@@ -99,7 +99,7 @@ CaseFlow/
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
+git clone <https://github.com/naveena-zen/CaseFlow>
 cd CaseFlow
 
 # 2. Install backend dependencies
