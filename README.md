@@ -31,22 +31,6 @@
 
 ---
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Vanilla JS, Bootstrap 5, Bootstrap Icons, Chart.js |
-| **Backend** | Node.js, Express.js |
-| **Database** | MongoDB, Mongoose |
-| **Auth & Security** | JWT, bcryptjs, Helmet, Zod, express-rate-limit |
-| **File Uploads** | Multer (type filter, 5MB limit, filename sanitization) |
-| **Email Reminders** | Nodemailer (Mailtrap in dev) |
-| **Scheduler** | node-cron |
-| **Testing** | Jest, Supertest, mongodb-memory-server |
-| **CI** | GitHub Actions |
-
----
-
 ## 📂 Project Structure
 
 ```
