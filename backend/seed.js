@@ -10,13 +10,15 @@ const seedData = async () => {
   try {
     await connectDB();
 
-    console.log('Clearing existing database collections...');
-    await User.deleteMany({});
-    await Case.deleteMany({});
-    await Deadline.deleteMany({});
-    await Document.deleteMany({});
+    console.log('🔄 Cleaning existing collections for idempotent seeding...');
+    await Promise.all([
+      User.deleteMany({}),
+      Case.deleteMany({}),
+      Deadline.deleteMany({}),
+      Document.deleteMany({})
+    ]);
 
-    console.log('Seeding synthetic users (lawyers & clients)...');
+    console.log('👤 Seeding synthetic users (lawyers & clients)...');
     const lawyer1 = new User({
       name: 'Eleanor Vance, Esq.',
       email: 'lawyer@caseflow.dev',
@@ -50,7 +52,7 @@ const seedData = async () => {
     await client1.save();
     await client2.save();
 
-    console.log('Seeding synthetic legal cases...');
+    console.log('⚖️ Seeding synthetic legal cases...');
     const cases = [
       {
         title: 'Apex Horizon vs. CyberNet Systems',
@@ -84,7 +86,7 @@ const seedData = async () => {
 
     const savedCases = await Case.insertMany(cases);
 
-    console.log('Seeding initial deadlines...');
+    console.log('📅 Seeding initial deadlines...');
     const deadlines = [];
     savedCases.forEach((c) => {
       deadlines.push({
@@ -101,13 +103,15 @@ const seedData = async () => {
 
     await Deadline.insertMany(deadlines);
 
-    console.log('✅ Seed completed successfully!');
-    console.log('Created accounts:');
+    console.log('✅ Idempotent seed completed successfully!');
+    console.log('Created default accounts:');
     console.log(' - Lawyer: lawyer@caseflow.dev / password123');
     console.log(' - Client: client@caseflow.dev / password123');
+
+    await mongoose.connection.close();
     process.exit(0);
   } catch (err) {
-    console.error('Error seeding database:', err);
+    console.error('❌ Error seeding database:', err);
     process.exit(1);
   }
 };

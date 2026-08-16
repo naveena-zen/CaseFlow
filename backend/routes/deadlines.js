@@ -5,6 +5,7 @@ const { verifyToken, requireRole } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { verifyCaseAccess, verifyCaseLawyer, verifyDeadlineAccess } = require('../middleware/ownership');
 const { deadlineSchema } = require('../validators');
+const { logActivity } = require('../utils/activityLogger');
 
 // POST /api/deadlines/:caseId — lawyer adds deadline
 router.post('/:caseId', verifyToken, requireRole('lawyer'), verifyCaseLawyer, validate(deadlineSchema), async (req, res) => {
@@ -16,6 +17,14 @@ router.post('/:caseId', verifyToken, requireRole('lawyer'), verifyCaseLawyer, va
       dueDate: new Date(dueDate)
     });
     await deadline.save();
+
+    await logActivity({
+      caseId: req.params.caseId,
+      userId: req.user.id,
+      action: 'DEADLINE_CREATED',
+      description: `Created deadline "${title}" (Due: ${new Date(dueDate).toLocaleDateString()})`
+    });
+
     res.status(201).json(deadline);
   } catch (err) {
     res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
@@ -41,6 +50,14 @@ router.put('/:id', verifyToken, requireRole('lawyer'), verifyDeadlineAccess, val
       { title, dueDate: new Date(dueDate) },
       { new: true }
     );
+
+    await logActivity({
+      caseId: updated.caseId,
+      userId: req.user.id,
+      action: 'DEADLINE_UPDATED',
+      description: `Updated deadline "${title}" (Due: ${new Date(dueDate).toLocaleDateString()})`
+    });
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
@@ -50,7 +67,16 @@ router.put('/:id', verifyToken, requireRole('lawyer'), verifyDeadlineAccess, val
 // DELETE /api/deadlines/:id — lawyer deletes deadline
 router.delete('/:id', verifyToken, requireRole('lawyer'), verifyDeadlineAccess, async (req, res) => {
   try {
+    const deadline = req.deadline;
     await Deadline.findByIdAndDelete(req.params.id);
+
+    await logActivity({
+      caseId: deadline.caseId,
+      userId: req.user.id,
+      action: 'DEADLINE_DELETED',
+      description: `Deleted deadline "${deadline.title}"`
+    });
+
     res.json({ message: 'Deadline deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });

@@ -4,43 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Cases – CaseFlow</title>
+  <meta name="description" content="View your assigned legal cases on CaseFlow, the client portal for secure case management." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <style>
-    body { background: #f0f4f8; }
-    .navbar { background: linear-gradient(135deg, #1e3c72, #2a5298); }
-    .cases-card { background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); overflow: hidden; }
-    .btn-view { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: none; font-size: .85rem; }
-    .btn-view:hover { opacity: .9; color: #fff; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; margin: 0; }
+    .cf-nav {
+      background: linear-gradient(135deg, #0f2044, #2a5298);
+      padding: .9rem 1.5rem; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.18);
+    }
+    .cf-nav-brand { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -1px; text-decoration: none; }
+    .cf-nav-right { display: flex; align-items: center; gap: .75rem; }
+    .nav-user { color: rgba(255,255,255,.85); font-size: .85rem; font-weight: 500; }
+    .btn-nav-logout { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 8px; font-size: .82rem; padding: .4rem .9rem; cursor: pointer; }
+    .btn-nav-logout:hover { background: rgba(255,255,255,.22); }
+    .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+    @media(max-width:640px) {
+      .hamburger { display: block; }
+      .cf-nav-right { display: none; flex-direction: column; align-items: flex-start; width: 100%; margin-top: .75rem; }
+      .cf-nav-right.open { display: flex; }
+      .cf-nav { flex-wrap: wrap; }
+    }
+
+    .cf-main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+    .table-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); overflow: hidden; }
+    .table { margin: 0; font-size: .875rem; }
+    .table thead th { background: #f8f9fc; font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #495057; border: none; padding: .9rem 1rem; }
+    .table tbody td { padding: .85rem 1rem; vertical-align: middle; border-color: #f0f4f8; }
+    .table tbody tr:hover { background: #f8f9fc; }
+    .btn-view { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: none; border-radius: 7px; font-size: .78rem; padding: .35rem .8rem; transition: opacity .2s; }
+    .btn-view:hover { opacity: .85; color: #fff; }
+
+    /* Search bar */
+    .filter-bar { background: #fff; border-radius: 14px; padding: 1rem 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 1.25rem; }
+    .filter-bar .form-control, .filter-bar .form-select { border-radius: 8px; border: 1.5px solid #dee2e6; font-size: .875rem; }
+    .filter-bar .form-control:focus, .filter-bar .form-select:focus { border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,.1); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 3.5rem 1rem; color: #6c757d; }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: .75rem; opacity: .5; }
+    .empty-state h5 { font-weight: 700; color: #495057; margin-bottom: .5rem; }
+    .empty-state p { font-size: .875rem; margin-bottom: 0; }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand fw-bold fs-4">⚖️ CaseFlow</span>
-    <div class="d-flex align-items-center gap-3">
-      <span class="text-white small" id="welcomeMsg"></span>
-      <button class="btn btn-outline-light btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  <nav class="cf-nav">
+    <a href="/pages/client-dashboard.html" class="cf-nav-brand">⚖️ CaseFlow</a>
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="cf-nav-right" id="navRight">
+      <span class="nav-user" id="welcomeMsg"></span>
+      <button class="btn-nav-logout" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
     </div>
   </nav>
 
-  <div class="container py-4">
-    <h4 class="fw-bold mb-4">My Assigned Cases</h4>
-    <div class="cases-card">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+  <div class="cf-main">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h1 class="fs-4 fw-bold mb-0">My Assigned Cases</h1>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-4">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold small mb-1">Search</label>
+          <input type="search" id="searchInput" class="form-control" placeholder="Search by case title or lawyer name…" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small mb-1">Status</label>
+          <select id="statusFilter" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table class="table table-hover">
+        <thead>
           <tr>
-            <th>Case Title</th>
-            <th>Lawyer</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th>Action</th>
+            <th>Case Title</th><th>Lawyer</th><th>Status</th><th>Created</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="casesBody">
-          <tr><td colspan="5" class="text-center text-muted py-4">Loading your cases...</td></tr>
+          <tr><td colspan="5">
+            <div style="padding:1rem">
+              ${[1,2,3].map(() => '<div class="cf-skeleton mb-2" style="height:1.1rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>').join('')}
+            </div>
+          </td></tr>
         </tbody>
       </table>
     </div>
+    <div id="paginationContainer" class="mt-3"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -49,26 +117,69 @@
     if (!requireAuth('client')) throw new Error('Not authorized');
     document.getElementById('welcomeMsg').textContent = 'Welcome, ' + getUser().name;
 
-    async function loadCases() {
-      const res = await fetch('/api/cases', { headers: authHeaders() });
-      const cases = await res.json();
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navRight').classList.toggle('open');
+    });
+
+    let currentPage = 1, currentSearch = '', currentStatus = '';
+
+    async function loadCases(page = 1) {
+      currentPage = page;
       const tbody = document.getElementById('casesBody');
-      if (!cases.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No cases assigned to you yet.</td></tr>';
-        return;
+      tbody.innerHTML = [1,2,3].map(() => `<tr>${[1,2,3,4,5].map(() => `<td><div class="cf-skeleton" style="height:.9rem;border-radius:5px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></td>`).join('')}</tr>`).join('');
+
+      const params = new URLSearchParams({ page, limit: 10 });
+      if (currentSearch) params.append('search', currentSearch);
+      if (currentStatus) params.append('status', currentStatus);
+
+      try {
+        const res  = await fetch(`/api/cases?${params}`, { headers: authHeaders() });
+        const data = await res.json();
+        const cases = data.cases || data;
+
+        if (!cases || !cases.length) {
+          tbody.innerHTML = `<tr><td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon">⚖️</div>
+              <h5>No Cases Found</h5>
+              <p>${currentSearch || currentStatus ? 'Try different search terms or clear the filters.' : 'No cases have been assigned to you yet. Your lawyer will add them here.'}</p>
+            </div></td></tr>`;
+          document.getElementById('paginationContainer').innerHTML = '';
+          return;
+        }
+
+        tbody.innerHTML = cases.map(c => `
+          <tr>
+            <td class="fw-semibold">${c.title}</td>
+            <td>${c.lawyerId ? c.lawyerId.name : '—'}</td>
+            <td>${statusBadge(c.status)}</td>
+            <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+            <td><a href="/pages/client-case-view.html?id=${c._id}" class="btn-view"><i class="bi bi-eye me-1"></i>View</a></td>
+          </tr>
+        `).join('');
+
+        if (data.pagination) renderPagination('paginationContainer', data.pagination, loadCases);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load cases. Please refresh.</td></tr>`;
       }
-      tbody.innerHTML = cases.map(c => `
-        <tr>
-          <td class="fw-semibold">${c.title}</td>
-          <td>${c.lawyerId ? c.lawyerId.name : '—'}</td>
-          <td>${statusBadge(c.status)}</td>
-          <td>${new Date(c.createdAt).toLocaleDateString()}</td>
-          <td><a href="/pages/client-case-view.html?id=${c._id}" class="btn btn-view btn-sm"><i class="bi bi-eye me-1"></i>View</a></td>
-        </tr>
-      `).join('');
     }
 
-    loadCases();
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      currentSearch = document.getElementById('searchInput').value.trim();
+      currentStatus = document.getElementById('statusFilter').value;
+      loadCases(1);
+    });
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      currentSearch = ''; currentStatus = '';
+      loadCases(1);
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('searchBtn').click();
+    });
+
+    loadCases(1);
   </script>
 </body>
 </html>

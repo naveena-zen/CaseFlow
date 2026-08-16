@@ -24,10 +24,14 @@ router.post('/register', validate(registerSchema), async (req, res) => {
     const user = new User({ name, email: email.toLowerCase(), password, role });
     await user.save();
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET || 'caseflow_dev_secret_key_12345',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
     );
 
     res.status(201).json({
@@ -63,10 +67,14 @@ router.post('/login', validate(loginSchema), async (req, res) => {
       });
     }
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET || 'caseflow_dev_secret_key_12345',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
     );
 
     res.json({

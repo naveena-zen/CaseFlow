@@ -6,6 +6,11 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
 
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET environment variable is not configured.');
+  throw new Error('FATAL ERROR: JWT_SECRET environment variable is not configured.');
+}
+
 const app = express();
 
 // Security HTTP Headers
@@ -17,10 +22,18 @@ app.use(
 );
 
 // Enable CORS
-const allowedOrigins = process.env.CLIENT_ORIGIN ? [process.env.CLIENT_ORIGIN, 'http://localhost:5000', 'http://127.0.0.1:5000'] : '*';
+const parseCorsOrigins = () => {
+  const envOrigins = process.env.CORS_ORIGIN || process.env.CLIENT_ORIGIN;
+  if (!envOrigins) {
+    return ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://localhost:3000', 'http://127.0.0.1:3000'];
+  }
+  if (envOrigins === '*') return '*';
+  return envOrigins.split(',').map((o) => o.trim());
+};
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: parseCorsOrigins(),
     credentials: true
   })
 );
@@ -63,14 +76,14 @@ app.use('/api/cases', require('./routes/cases'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/deadlines', require('./routes/deadlines'));
 
-// Fallback: serve index.html for SPA routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
 // Global 404 Handler for API routes
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: { code: 'NOT_FOUND', message: 'API endpoint not found' } });
+});
+
+// Fallback: serve index.html for SPA routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Global Error Handling Middleware
@@ -84,11 +97,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+const { startReminderCron } = require('./services/reminderService');
+
 const PORT = process.env.PORT || 5000;
 
 // Connect to Database and start server
 if (process.env.NODE_ENV !== 'test') {
   connectDB().then(() => {
+    startReminderCron();
     app.listen(PORT, () => {
       console.log(`🚀 CaseFlow Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });

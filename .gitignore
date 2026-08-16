@@ -6,8 +6,8 @@
 node_modules/
 
 # Uploaded files
-uploads/
-backend/uploads/
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Build and coverage outputs
 dist/
