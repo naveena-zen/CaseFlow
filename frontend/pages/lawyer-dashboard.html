@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawyer Dashboard – CaseFlow</title>
+  <meta name="description" content="Manage your legal cases, track deadlines, and monitor analytics on the CaseFlow lawyer dashboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; margin: 0; }
+
+    /* ── Navbar ── */
+    .cf-nav {
+      background: linear-gradient(135deg, #0f2044, #2a5298);
+      padding: .9rem 1.5rem; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.18);
+    }
+    .cf-nav-brand { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -1px; text-decoration: none; }
+    .cf-nav-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .cf-nav .nav-user { color: rgba(255,255,255,.85); font-size: .85rem; font-weight: 500; }
+    .btn-nav-logout { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 8px; font-size: .82rem; padding: .4rem .9rem; cursor: pointer; transition: background .2s; }
+    .btn-nav-logout:hover { background: rgba(255,255,255,.22); }
+    .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+
+    /* ── Responsive Nav ── */
+    @media (max-width: 640px) {
+      .hamburger { display: block; }
+      .cf-nav-right { display: none; flex-direction: column; align-items: flex-start; width: 100%; margin-top: .75rem; }
+      .cf-nav-right.open { display: flex; }
+      .cf-nav { flex-wrap: wrap; }
+    }
+
+    /* ── Layout ── */
+    .cf-main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+
+    /* ── Stat Cards ── */
+    .stat-card {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.07); padding: 1.25rem 1.5rem;
+      transition: transform .2s, box-shadow .2s; cursor: default;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    .stat-icon { font-size: 1.9rem; margin-bottom: .5rem; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #1e3c72; }
+    .stat-lbl { font-size: .8rem; color: #6c757d; font-weight: 500; }
+
+    /* ── Search & Filters ── */
+    .filter-bar { background: #fff; border-radius: 14px; padding: 1rem 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 1.25rem; }
+    .filter-bar .form-control, .filter-bar .form-select { border-radius: 8px; border: 1.5px solid #dee2e6; font-size: .875rem; }
+    .filter-bar .form-control:focus, .filter-bar .form-select:focus { border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,.1); }
+
+    /* ── Table Card ── */
+    .table-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.06); overflow: hidden; }
+    .table { margin: 0; font-size: .875rem; }
+    .table thead th { background: #f8f9fc; font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #495057; border: none; padding: .9rem 1rem; }
+    .table tbody td { padding: .85rem 1rem; vertical-align: middle; border-color: #f0f4f8; }
+    .table tbody tr:hover { background: #f8f9fc; }
+    .btn-view { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: none; border-radius: 7px; font-size: .78rem; padding: .35rem .8rem; transition: opacity .2s; }
+    .btn-view:hover { opacity: .85; color: #fff; }
+    .btn-del { background: #fff0f0; color: #c0392b; border: 1px solid #fad4d4; border-radius: 7px; font-size: .78rem; padding: .35rem .8rem; transition: background .2s; }
+    .btn-del:hover { background: #fad4d4; }
+
+    /* ── Charts ── */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+    @media(max-width:768px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); padding: 1.25rem; }
+    .chart-title { font-weight: 700; font-size: .95rem; margin-bottom: 1rem; color: #212529; }
+    canvas { max-height: 200px; }
+
+    /* ── Upcoming Deadlines list ── */
+    .deadline-item { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #f0f4f8; }
+    .deadline-item:last-child { border-bottom: none; }
+    .deadline-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .deadline-urgent { background: #e74c3c; }
+    .deadline-soon   { background: #f39c12; }
+    .deadline-ok     { background: #11998e; }
+
+    /* ── Empty State ── */
+    .empty-state { text-align: center; padding: 3.5rem 1rem; color: #6c757d; }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: .75rem; opacity: .5; }
+    .empty-state h5 { font-weight: 700; color: #495057; margin-bottom: .5rem; }
+    .empty-state p { font-size: .875rem; margin-bottom: 1.25rem; }
+
+    /* ── Modal ── */
+    .modal-content { border: none; border-radius: 18px; }
+    .modal-header { border: none; padding-bottom: 0; }
+    .modal-body .form-control, .modal-body .form-select { border-radius: 9px; border: 1.5px solid #dee2e6; }
+    .btn-modal-submit { background: linear-gradient(135deg, #1e3c72, #2a5298); border: none; border-radius: 9px; color: #fff; font-weight: 600; padding: .75rem; width: 100%; }
+    .btn-modal-submit:hover { opacity: .9; color: #fff; }
+
+    /* ── Section heading ── */
+    .section-heading { font-weight: 700; font-size: 1rem; color: #212529; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="cf-nav">
+    <a href="/pages/lawyer-dashboard.html" class="cf-nav-brand">⚖️ CaseFlow</a>
+    <button class="hamburger" id="hamburger" aria-label="Toggle navigation">☰</button>
+    <div class="cf-nav-right" id="navRight">
+      <span class="nav-user" id="welcomeMsg"></span>
+      <button class="btn-nav-logout" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+    </div>
+  </nav>
+
+  <div class="cf-main">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h1 class="fs-4 fw-bold mb-0">Lawyer Dashboard</h1>
+      <button class="btn btn-primary px-4" id="newCaseBtn" data-bs-toggle="modal" data-bs-target="#newCaseModal">
+        <i class="bi bi-plus-circle me-1"></i> New Case
+      </button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4" id="statsRow">
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon">📁</div><div class="stat-num" id="statTotal"><div class="cf-skeleton" style="height:2rem;width:3rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div><div class="stat-lbl">Total Cases</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon">🟡</div><div class="stat-num" id="statOpen"><div class="cf-skeleton" style="height:2rem;width:2rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div><div class="stat-lbl">Open</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon">🔵</div><div class="stat-num" id="statActive"><div class="cf-skeleton" style="height:2rem;width:2rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div><div class="stat-lbl">Active</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon">⚫</div><div class="stat-num" id="statClosed"><div class="cf-skeleton" style="height:2rem;width:2rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div><div class="stat-lbl">Closed</div></div></div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">📊 Case Status Breakdown</div>
+        <canvas id="statusChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📅 Upcoming Deadlines (Next 14 Days)</div>
+        <div id="upcomingDeadlinesList" style="max-height:200px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filter-bar mb-4">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold small mb-1">Search</label>
+          <input type="search" id="searchInput" class="form-control" placeholder="Search by case title or client name…" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small mb-1">Status</label>
+          <select id="statusFilter" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases Table -->
+    <div class="section-heading">My Cases</div>
+    <div class="table-card">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Case Title</th><th>Client</th><th>Status</th><th>Created</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="casesBody">
+          <tr><td colspan="5">${skeletonRow ? '' : ''}<div style="padding:1rem">
+            ${[1,2,3].map(() => `<div class="cf-skeleton mb-2" style="height:1.1rem;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>`).join('')}
+          </div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="paginationContainer" class="mt-3"></div>
+  </div>
+
+  <!-- New Case Modal -->
+  <div class="modal fade" id="newCaseModal" tabindex="-1" aria-labelledby="newCaseModalLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="newCaseModalLabel">Create New Case</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newCaseForm" novalidate>
+            <div class="mb-3">
+              <label for="caseTitle" class="form-label fw-semibold small">Case Title</label>
+              <input type="text" id="caseTitle" class="form-control" placeholder="e.g. Smith vs. Johnson" />
+            </div>
+            <div class="mb-3">
+              <label for="caseDescription" class="form-label fw-semibold small">Description</label>
+              <textarea id="caseDescription" class="form-control" rows="3" placeholder="Brief case description…"></textarea>
+            </div>
+            <div class="mb-4">
+              <label for="clientSelect" class="form-label fw-semibold small">Assign Client</label>
+              <select id="clientSelect" class="form-select">
+                <option value="">Loading clients…</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-modal-submit" id="createCaseBtn">Create Case</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    if (!requireAuth('lawyer')) throw new Error('Not authorized');
+    document.getElementById('welcomeMsg').textContent = 'Welcome, ' + getUser().name;
+
+    // Responsive hamburger
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navRight').classList.toggle('open');
+    });
+
+    let currentPage = 1, currentSearch = '', currentStatus = '';
+    let statusChart = null;
+
+    // ── Load Analytics ──
+    async function loadAnalytics() {
+      try {
+        const res  = await fetch('/api/cases/analytics/summary', { headers: authHeaders() });
+        const data = await res.json();
+
+        // Stat cards
+        document.getElementById('statTotal').textContent  = data.totalCases;
+        document.getElementById('statOpen').textContent   = data.statusBreakdown.Open;
+        document.getElementById('statActive').textContent = data.statusBreakdown.Active;
+        document.getElementById('statClosed').textContent = data.statusBreakdown.Closed;
+
+        // Status doughnut chart
+        if (statusChart) statusChart.destroy();
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        statusChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Open', 'Active', 'Closed'],
+            datasets: [{ data: [data.statusBreakdown.Open, data.statusBreakdown.Active, data.statusBreakdown.Closed], backgroundColor: ['#f39c12','#2a5298','#adb5bd'], borderWidth: 3, borderColor: '#fff' }]
+          },
+          options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }, cutout: '65%', animation: { animateRotate: true } }
+        });
+
+        // Upcoming deadlines
+        const dlEl = document.getElementById('upcomingDeadlinesList');
+        if (!data.upcomingDeadlines || data.upcomingDeadlines.length === 0) {
+          dlEl.innerHTML = '<p class="text-muted small" style="padding:.5rem">No deadlines in the next 14 days.</p>';
+        } else {
+          dlEl.innerHTML = data.upcomingDeadlines.map(d => {
+            const daysLeft = Math.ceil((new Date(d.dueDate) - new Date()) / 86400000);
+            const dotClass = daysLeft <= 1 ? 'deadline-urgent' : daysLeft <= 3 ? 'deadline-soon' : 'deadline-ok';
+            return `<div class="deadline-item">
+              <div class="deadline-dot ${dotClass}"></div>
+              <div style="flex:1;min-width:0">
+                <div class="fw-semibold small text-truncate">${d.title}</div>
+                <div class="text-muted" style="font-size:.75rem">${d.caseId?.title || '—'} · ${daysLeft}d left</div>
+              </div>
+              <span class="badge ${daysLeft <= 1 ? 'bg-danger' : daysLeft <= 3 ? 'bg-warning text-dark' : 'bg-success'}" style="font-size:.7rem">${new Date(d.dueDate).toLocaleDateString()}</span>
+            </div>`;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Analytics load failed:', err);
+      }
+    }
+
+    // ── Load Cases ──
+    async function loadCases(page = 1) {
+      currentPage = page;
+      const tbody = document.getElementById('casesBody');
+      tbody.innerHTML = [1,2,3].map(() => `<tr>${[1,2,3,4,5].map(() => `<td><div class="cf-skeleton" style="height:.9rem;border-radius:5px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></td>`).join('')}</tr>`).join('');
+
+      const params = new URLSearchParams({ page, limit: 10 });
+      if (currentSearch) params.append('search', currentSearch);
+      if (currentStatus) params.append('status', currentStatus);
+
+      try {
+        const res  = await fetch(`/api/cases?${params}`, { headers: authHeaders() });
+        const data = await res.json();
+        const cases = data.cases || data; // handle both paginated and legacy
+
+        if (!cases || !cases.length) {
+          tbody.innerHTML = `<tr><td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon">⚖️</div>
+              <h5>No cases found</h5>
+              <p>${currentSearch || currentStatus ? 'Try different search terms or clear the filters.' : 'Get started by creating your first case.'}</p>
+              ${!currentSearch && !currentStatus ? '<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCaseModal"><i class="bi bi-plus-circle me-1"></i>Create First Case</button>' : ''}
+            </div></td></tr>`;
+          document.getElementById('paginationContainer').innerHTML = '';
+          return;
+        }
+
+        tbody.innerHTML = cases.map(c => `
+          <tr>
+            <td class="fw-semibold">${c.title}</td>
+            <td>${c.clientId ? c.clientId.name : '—'}</td>
+            <td>${statusBadge(c.status)}</td>
+            <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+            <td>
+              <a href="/pages/lawyer-case-detail.html?id=${c._id}" class="btn-view me-1"><i class="bi bi-eye me-1"></i>View</a>
+              ${c.status === 'Closed' ? `<button class="btn-del" onclick="deleteCase('${c._id}')"><i class="bi bi-trash me-1"></i>Delete</button>` : ''}
+            </td>
+          </tr>
+        `).join('');
+
+        if (data.pagination) {
+          renderPagination('paginationContainer', data.pagination, loadCases);
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p class="text-danger">Failed to load cases. Please refresh.</p></div></td></tr>`;
+      }
+    }
+
+    async function deleteCase(id) {
+      if (!confirm('Delete this closed case? This cannot be undone.')) return;
+      const res  = await fetch(`/api/cases/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast('Case deleted successfully.', 'success'); loadCases(currentPage); loadAnalytics(); }
+      else showToast(data.error?.message || 'Failed to delete case.', 'error');
+    }
+
+    // ── Search / Filter ──
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      currentSearch = document.getElementById('searchInput').value.trim();
+      currentStatus = document.getElementById('statusFilter').value;
+      loadCases(1);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      currentSearch = ''; currentStatus = '';
+      loadCases(1);
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('searchBtn').click();
+    });
+
+    // ── Load Clients ──
+    async function loadClients() {
+      const res     = await fetch('/api/auth/clients', { headers: authHeaders() });
+      const clients = await res.json();
+      const sel     = document.getElementById('clientSelect');
+      if (!clients.length) { sel.innerHTML = '<option value="">No clients registered yet</option>'; return; }
+      sel.innerHTML = clients.map(c => `<option value="${c._id}">${c.name} (${c.email})</option>`).join('');
+    }
+
+    document.getElementById('newCaseModal').addEventListener('show.bs.modal', loadClients);
+
+    // ── Create Case ──
+    document.getElementById('newCaseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFieldErrors();
+      const title       = document.getElementById('caseTitle').value.trim();
+      const description = document.getElementById('caseDescription').value.trim();
+      const clientId    = document.getElementById('clientSelect').value;
+      const btn         = document.getElementById('createCaseBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating…';
+
+      const res  = await fetch('/api/cases', {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ title, description, clientId })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.error?.details) showFieldErrors(data.error.details);
+        else showToast(data.error?.message || 'Failed to create case.', 'error');
+        btn.disabled = false; btn.innerHTML = 'Create Case';
+        return;
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('newCaseModal')).hide();
+      document.getElementById('newCaseForm').reset();
+      btn.disabled = false; btn.innerHTML = 'Create Case';
+      showToast(`Case "${data.title}" created successfully! ✅`, 'success');
+      loadCases(1); loadAnalytics();
+    });
+
+    loadAnalytics();
+    loadCases(1);
+  </script>
+</body>
+</html>

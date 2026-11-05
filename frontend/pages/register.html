@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register – CaseFlow</title>
+  <meta name="description" content="Create a new CaseFlow account for lawyers or clients to manage legal cases securely." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f2044, #1e3c72 50%, #2a5298 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .reg-card {
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.28); padding: 2.5rem 2.25rem;
+      width: 100%; max-width: 440px; animation: fadeUp .45s ease;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+    .brand-logo { font-size: 2.1rem; font-weight: 800; color: #1e3c72; letter-spacing: -1.5px; }
+    .brand-sub  { font-size: .875rem; color: #6c757d; margin-top: .25rem; }
+    .form-control, .form-select {
+      border-radius: 10px; border: 1.5px solid #dee2e6;
+      padding: .75rem 1rem; font-size: .95rem; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,.15); outline: none;
+    }
+    .btn-register {
+      background: linear-gradient(135deg, #11998e, #38ef7d); border: none;
+      border-radius: 10px; color: #fff; font-weight: 600; padding: .8rem;
+      width: 100%; font-size: .95rem; transition: opacity .2s, transform .15s;
+    }
+    .btn-register:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+    .btn-register:disabled { opacity: .65; cursor: not-allowed; }
+    .pw-hint { font-size: .75rem; color: #6c757d; margin-top: .3rem; }
+    .pw-check { display: flex; gap: 1rem; margin-top: .4rem; }
+    .pw-check span { font-size: .75rem; display: flex; align-items: center; gap: .25rem; transition: color .2s; }
+    .pw-check .valid { color: #11998e; font-weight: 600; }
+    .pw-check .invalid { color: #adb5bd; }
+    .field-group { position: relative; margin-bottom: 1rem; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #6c757d; padding: 0; font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="reg-card">
+    <div class="text-center mb-4">
+      <div class="brand-logo">⚖️ CaseFlow</div>
+      <div class="brand-sub">Create Your Account</div>
+    </div>
+
+    <form id="registerForm" novalidate>
+      <div class="mb-3">
+        <label for="name" class="form-label fw-semibold small">Full Name</label>
+        <input type="text" id="name" class="form-control" placeholder="Jane Doe" autocomplete="name" />
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label fw-semibold small">Email Address</label>
+        <input type="email" id="email" class="form-control" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="mb-3 field-group">
+        <label for="password" class="form-label fw-semibold small">Password</label>
+        <input type="password" id="password" class="form-control pe-5" placeholder="Min 8 chars, 1 number" autocomplete="new-password" />
+        <button type="button" class="pw-toggle" aria-label="Toggle password visibility">👁</button>
+        <div class="pw-check">
+          <span id="pw-len" class="invalid">✗ 8+ characters</span>
+          <span id="pw-num" class="invalid">✗ Contains a number</span>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label for="role" class="form-label fw-semibold small">Account Role</label>
+        <select id="role" class="form-select">
+          <option value="">Select role…</option>
+          <option value="lawyer">⚖️ Lawyer</option>
+          <option value="client">👤 Client</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-register" id="regBtn">Create Account</button>
+    </form>
+
+    <p class="text-center mt-3 mb-0 text-muted small">
+      Already have an account? <a href="/pages/login.html" class="fw-semibold text-decoration-none" style="color:#1e3c72">Sign In</a>
+    </p>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    document.querySelector('.pw-toggle').addEventListener('click', () => {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    });
+
+    // Live password policy indicators
+    document.getElementById('password').addEventListener('input', function() {
+      const v = this.value;
+      const lenOk = v.length >= 8, numOk = /\d/.test(v);
+      const lenEl = document.getElementById('pw-len'), numEl = document.getElementById('pw-num');
+      lenEl.className = lenOk ? 'valid' : 'invalid';
+      lenEl.textContent = (lenOk ? '✓' : '✗') + ' 8+ characters';
+      numEl.className = numOk ? 'valid' : 'invalid';
+      numEl.textContent = (numOk ? '✓' : '✗') + ' Contains a number';
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFieldErrors();
+      const name     = document.getElementById('name').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const role     = document.getElementById('role').value;
+      const btn      = document.getElementById('regBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account…';
+
+      try {
+        const res  = await fetch('/api/auth/register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (data.error?.details) showFieldErrors(data.error.details);
+          else showToast(data.error?.message || 'Registration failed. Please try again.', 'error');
+          btn.disabled = false; btn.innerHTML = 'Create Account';
+          return;
+        }
+
+        showToast('Account created successfully! Redirecting to login…', 'success');
+        setTimeout(() => { window.location.href = '/pages/login.html'; }, 1400);
+      } catch (err) {
+        showToast('Server error. Please try again.', 'error');
+        btn.disabled = false; btn.innerHTML = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

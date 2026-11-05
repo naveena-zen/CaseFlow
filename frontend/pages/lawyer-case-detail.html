@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Detail – CaseFlow</title>
+  <meta name="description" content="View case details, upload documents, manage deadlines, and track the activity timeline." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; margin: 0; }
+    .cf-nav {
+      background: linear-gradient(135deg, #0f2044, #2a5298);
+      padding: .9rem 1.5rem; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.18);
+    }
+    .cf-nav-brand { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; display: flex; align-items: center; gap: .5rem; }
+    .cf-nav-brand:hover { color: rgba(255,255,255,.85); }
+    .btn-nav-logout { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 8px; font-size: .82rem; padding: .4rem .9rem; cursor: pointer; }
+    .btn-nav-logout:hover { background: rgba(255,255,255,.22); }
+    .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+    .cf-nav-right { display: flex; align-items: center; gap: .75rem; }
+    @media(max-width: 640px) {
+      .hamburger { display: block; }
+      .cf-nav-right { display: none; flex-direction: column; align-items: flex-start; width: 100%; margin-top: .75rem; }
+      .cf-nav-right.open { display: flex; }
+      .cf-nav { flex-wrap: wrap; }
+    }
+
+    .cf-main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+    .section-card {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.07); padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-weight: 700; font-size: 1rem; color: #212529;
+      border-left: 4px solid #2a5298; padding-left: .75rem; margin-bottom: 1.25rem;
+    }
+
+    /* Status select */
+    .status-select-wrap { position: relative; display: inline-block; }
+    .status-select { border-radius: 8px; border: 1.5px solid #dee2e6; padding: .45rem .9rem; font-size: .875rem; cursor: pointer; appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right .7rem center; padding-right: 2rem; }
+
+    /* Documents */
+    .doc-item { display: flex; align-items: center; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid #f0f4f8; }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .doc-meta { flex: 1; min-width: 0; }
+    .doc-name { font-weight: 600; font-size: .9rem; word-break: break-all; }
+    .doc-info { font-size: .75rem; color: #6c757d; }
+    .doc-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .btn-sm-action { font-size: .75rem; border-radius: 7px; padding: .3rem .65rem; border: 1px solid; cursor: pointer; transition: background .15s; }
+    .btn-download { background: #eaf0ff; color: #2a5298; border-color: #c5d5f5; }
+    .btn-download:hover { background: #c5d5f5; }
+    .btn-trash { background: #fff0f0; color: #c0392b; border-color: #fad4d4; }
+    .btn-trash:hover { background: #fad4d4; }
+    .upload-zone { border: 2px dashed #c5d5f5; border-radius: 12px; padding: 1.5rem; text-align: center; transition: border-color .2s, background .2s; cursor: pointer; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: #2a5298; background: #eaf0ff; }
+    .upload-zone .upload-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .upload-zone input { display: none; }
+    .version-badge { background: #f0f4f8; color: #495057; font-size: .7rem; border-radius: 6px; padding: .15rem .45rem; font-weight: 600; }
+
+    /* Deadlines */
+    .deadline-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid #f0f4f8; }
+    .deadline-item:last-child { border-bottom: none; }
+    .deadline-icon { font-size: 1.2rem; }
+    .deadline-meta { flex: 1; }
+    .deadline-title { font-weight: 600; font-size: .875rem; }
+    .deadline-date  { font-size: .75rem; color: #6c757d; }
+    .btn-deadline-del { font-size: .75rem; background: #fff0f0; color: #c0392b; border: 1px solid #fad4d4; border-radius: 7px; padding: .3rem .65rem; cursor: pointer; }
+    .btn-deadline-del:hover { background: #fad4d4; }
+
+    /* Activity Timeline */
+    .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 1rem; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #2a5298, #e9ecef); }
+    .timeline-item { display: flex; gap: 1rem; padding-bottom: 1.25rem; position: relative; }
+    .timeline-dot { width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; z-index: 1; background: #eaf0ff; border: 2px solid #2a5298; }
+    .timeline-content { flex: 1; min-width: 0; }
+    .timeline-action { font-weight: 600; font-size: .875rem; }
+    .timeline-desc { font-size: .8rem; color: #495057; margin-top: .15rem; }
+    .timeline-meta { font-size: .72rem; color: #adb5bd; margin-top: .2rem; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 2rem 1rem; color: #adb5bd; }
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .empty-state p { font-size: .85rem; margin: 0; }
+
+    /* Progress bar for upload */
+    .upload-progress { display: none; margin-top: .75rem; }
+  </style>
+</head>
+<body>
+  <nav class="cf-nav">
+    <a href="/pages/lawyer-dashboard.html" class="cf-nav-brand">
+      <i class="bi bi-arrow-left"></i> ⚖️ CaseFlow
+    </a>
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="cf-nav-right" id="navRight">
+      <button class="btn-nav-logout" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+    </div>
+  </nav>
+
+  <div class="cf-main">
+    <!-- Case Info -->
+    <div class="section-card" id="caseInfoCard">
+      <div class="section-title">Case Information</div>
+      <div id="caseInfo">
+        <div class="cf-skeleton mb-3" style="height:1.5rem;width:60%;border-radius:8px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+        <div class="cf-skeleton mb-2" style="height:1rem;width:80%;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+        <div class="cf-skeleton" style="height:1rem;width:40%;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="section-card">
+      <div class="section-title">Documents</div>
+      <!-- Upload Zone -->
+      <div class="upload-zone mb-3" id="uploadZone">
+        <div class="upload-icon">📎</div>
+        <div class="fw-semibold" style="font-size:.9rem">Drag & drop a file here or click to browse</div>
+        <div class="text-muted" style="font-size:.78rem">PDF, JPEG, PNG, WEBP, DOC, DOCX, TXT — max 5MB</div>
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.txt" />
+        <div class="mt-2">
+          <button class="btn btn-primary btn-sm px-3" id="uploadBtn"><i class="bi bi-upload me-1"></i>Upload</button>
+        </div>
+      </div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress" style="height:5px;border-radius:999px">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width:100%"></div>
+        </div>
+        <div class="text-muted small mt-1">Uploading file…</div>
+      </div>
+      <div id="docsList">
+        <div class="cf-skeleton mb-2" style="height:3rem;border-radius:10px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+        <div class="cf-skeleton" style="height:3rem;border-radius:10px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Deadlines -->
+    <div class="section-card">
+      <div class="section-title">Deadlines</div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-5">
+          <input type="text" id="deadlineTitle" class="form-control" placeholder="Deadline title" />
+        </div>
+        <div class="col-md-4">
+          <input type="date" id="deadlineDate" class="form-control" />
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary w-100" id="addDeadlineBtn"><i class="bi bi-calendar-plus me-1"></i>Add</button>
+        </div>
+      </div>
+      <div id="deadlinesList">
+        <div class="cf-skeleton mb-2" style="height:2.5rem;border-radius:8px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="section-card">
+      <div class="section-title">Activity Timeline</div>
+      <ul class="timeline" id="activityTimeline">
+        <li class="timeline-item">
+          <div class="timeline-dot"><div class="cf-skeleton" style="width:2rem;height:2rem;border-radius:50%;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div>
+          <div class="timeline-content"><div class="cf-skeleton" style="height:.9rem;width:70%;border-radius:5px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    if (!requireAuth('lawyer')) throw new Error('Not authorized');
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navRight').classList.toggle('open');
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const caseId = params.get('id');
+    if (!caseId) { showToast('No case ID specified.', 'error'); setTimeout(() => { window.location.href = '/pages/lawyer-dashboard.html'; }, 1500); }
+
+    const actionIcons = {
+      CASE_CREATED: '🗂️', STATUS_CHANGE: '🔄', DOCUMENT_UPLOAD: '📎',
+      DOCUMENT_VERSION_UPLOAD: '📌', DOCUMENT_DELETED: '🗑️',
+      DEADLINE_CREATED: '📅', DEADLINE_UPDATED: '✏️', DEADLINE_DELETED: '🗑️'
+    };
+
+    // ── Load Case ──
+    async function loadCase() {
+      const res = await fetch(`/api/cases/${caseId}`, { headers: authHeaders() });
+      if (!res.ok) { showToast('Failed to load case.', 'error'); return; }
+      const c = await res.json();
+      document.title = c.title + ' – CaseFlow';
+      document.getElementById('caseInfo').innerHTML = `
+        <div class="row">
+          <div class="col-md-8">
+            <h2 class="fs-5 fw-bold mb-1">${c.title}</h2>
+            <p class="text-muted mb-2" style="font-size:.875rem">${c.description || 'No description provided.'}</p>
+            <div style="font-size:.85rem;color:#495057">
+              <div><strong>Client:</strong> ${c.clientId ? c.clientId.name + ' &lt;' + c.clientId.email + '&gt;' : '—'}</div>
+              <div class="mt-1"><strong>Opened:</strong> ${new Date(c.createdAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+          <div class="col-md-4 d-flex flex-column align-items-md-end justify-content-start mt-3 mt-md-0">
+            <div class="fw-semibold small mb-1 text-muted">Case Status</div>
+            <select id="statusSelect" class="status-select" onchange="updateStatus(this.value)">
+              <option value="Open" ${c.status==='Open'?'selected':''}>Open</option>
+              <option value="Active" ${c.status==='Active'?'selected':''}>Active</option>
+              <option value="Closed" ${c.status==='Closed'?'selected':''}>Closed</option>
+            </select>
+            <div class="mt-2">${statusBadge(c.status)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function updateStatus(status) {
+      const res  = await fetch(`/api/cases/${caseId}/status`, {
+        method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error?.message || 'Status update failed.', 'error'); loadCase(); return; }
+      showToast(`Status updated to "${status}".`, 'success');
+      loadCase(); loadActivity();
+    }
+
+    // ── Load Documents ──
+    async function loadDocs() {
+      const res  = await fetch(`/api/documents/${caseId}`, { headers: authHeaders() });
+      const docs = await res.json();
+      const el   = document.getElementById('docsList');
+
+      if (!docs.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">📁</div><p>No documents uploaded yet.</p></div>`;
+        return;
+      }
+
+      el.innerHTML = docs.map(d => {
+        const ext = d.originalName.split('.').pop().toLowerCase();
+        const icons = { pdf:'📕', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', doc:'📘', docx:'📘', txt:'📄' };
+        const icon = icons[ext] || '📄';
+        return `
+          <div class="doc-item">
+            <div class="doc-icon">${icon}</div>
+            <div class="doc-meta">
+              <div class="doc-name">${d.originalName} <span class="version-badge">v${d.version}</span></div>
+              <div class="doc-info">Uploaded ${new Date(d.updatedAt).toLocaleDateString()} ${d.previousVersions?.length ? `· ${d.previousVersions.length} older version(s)` : ''}</div>
+            </div>
+            <div class="doc-actions">
+              <a href="/api/documents/download/${d._id}" class="btn-sm-action btn-download" target="_blank"><i class="bi bi-download"></i></a>
+              <button class="btn-sm-action btn-trash" onclick="deleteDoc('${d._id}')"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── Upload ──
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput  = document.getElementById('fileInput');
+
+    uploadZone.addEventListener('click', (e) => { if (e.target !== document.getElementById('uploadBtn') && !document.getElementById('uploadBtn').contains(e.target)) fileInput.click(); });
+    uploadZone.addEventListener('dragover',  (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) { fileInput.files = e.dataTransfer.files; doUpload(); } });
+    document.getElementById('uploadBtn').addEventListener('click', () => { if (fileInput.files.length) doUpload(); else fileInput.click(); });
+    fileInput.addEventListener('change', () => { if (fileInput.files.length) document.querySelector('.upload-zone .fw-semibold').textContent = fileInput.files[0].name; });
+
+    async function doUpload() {
+      if (!fileInput.files.length) { showToast('Please select a file first.', 'warning'); return; }
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading…';
+      document.getElementById('uploadProgress').style.display = 'block';
+
+      const fd = new FormData(); fd.append('file', fileInput.files[0]);
+      const res  = await fetch(`/api/documents/upload/${caseId}`, {
+        method: 'POST', headers: { Authorization: 'Bearer ' + getToken() }, body: fd
+      });
+      const data = await res.json();
+      document.getElementById('uploadProgress').style.display = 'none';
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-upload me-1"></i>Upload';
+
+      if (!res.ok) { showToast(data.error?.message || 'Upload failed.', 'error'); return; }
+      fileInput.value = '';
+      document.querySelector('.upload-zone .fw-semibold').textContent = 'Drag & drop a file here or click to browse';
+      showToast(data.version > 1 ? `Version ${data.version} uploaded for "${data.originalName}".` : `"${data.originalName}" uploaded successfully.`, 'success');
+      loadDocs(); loadActivity();
+    }
+
+    async function deleteDoc(docId) {
+      if (!confirm('Delete this document?')) return;
+      const res  = await fetch(`/api/documents/${docId}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast('Document deleted.', 'success'); loadDocs(); loadActivity(); }
+      else showToast(data.error?.message || 'Failed to delete document.', 'error');
+    }
+
+    // ── Load Deadlines ──
+    async function loadDeadlines() {
+      const res       = await fetch(`/api/deadlines/${caseId}`, { headers: authHeaders() });
+      const deadlines = await res.json();
+      const el        = document.getElementById('deadlinesList');
+
+      if (!deadlines.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><p>No deadlines set yet.</p></div>`;
+        return;
+      }
+
+      el.innerHTML = deadlines.map(d => {
+        const daysLeft = Math.ceil((new Date(d.dueDate) - new Date()) / 86400000);
+        const urgency  = daysLeft <= 1 ? '🔴' : daysLeft <= 3 ? '🟡' : '🟢';
+        return `
+          <div class="deadline-item">
+            <div class="deadline-icon">${urgency}</div>
+            <div class="deadline-meta">
+              <div class="deadline-title">${d.title}</div>
+              <div class="deadline-date">${new Date(d.dueDate).toLocaleDateString()} · ${daysLeft < 0 ? '<span style="color:#e74c3c">Overdue</span>' : daysLeft === 0 ? '<span style="color:#e74c3c">Due today!</span>' : daysLeft + 'd left'}</div>
+            </div>
+            <button class="btn-deadline-del" onclick="deleteDeadline('${d._id}')"><i class="bi bi-trash"></i></button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('addDeadlineBtn').addEventListener('click', async () => {
+      const title   = document.getElementById('deadlineTitle').value.trim();
+      const dueDate = document.getElementById('deadlineDate').value;
+      if (!title || !dueDate) { showToast('Please fill in both title and due date.', 'warning'); return; }
+      const btn = document.getElementById('addDeadlineBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Adding…';
+
+      const res  = await fetch(`/api/deadlines/${caseId}`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ title, dueDate }) });
+      const data = await res.json();
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-calendar-plus me-1"></i>Add';
+
+      if (!res.ok) { showToast(data.error?.message || 'Failed to add deadline.', 'error'); return; }
+      document.getElementById('deadlineTitle').value = '';
+      document.getElementById('deadlineDate').value  = '';
+      showToast(`Deadline "${title}" added.`, 'success');
+      loadDeadlines(); loadActivity();
+    });
+
+    async function deleteDeadline(id) {
+      if (!confirm('Delete this deadline?')) return;
+      const res  = await fetch(`/api/deadlines/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast('Deadline deleted.', 'success'); loadDeadlines(); loadActivity(); }
+      else showToast(data.error?.message || 'Failed to delete deadline.', 'error');
+    }
+
+    // ── Load Activity Timeline ──
+    async function loadActivity() {
+      const res  = await fetch(`/api/cases/${caseId}/activity`, { headers: authHeaders() });
+      const logs = await res.json();
+      const el   = document.getElementById('activityTimeline');
+
+      if (!Array.isArray(logs) || !logs.length) {
+        el.innerHTML = `<li><div class="empty-state"><div class="empty-icon">📋</div><p>No activity recorded yet.</p></div></li>`;
+        return;
+      }
+
+      el.innerHTML = logs.map(log => `
+        <li class="timeline-item">
+          <div class="timeline-dot">${actionIcons[log.action] || '•'}</div>
+          <div class="timeline-content">
+            <div class="timeline-action">${log.description}</div>
+            <div class="timeline-meta">by ${log.userId?.name || 'Unknown'} · ${new Date(log.createdAt).toLocaleString()}</div>
+          </div>
+        </li>
+      `).join('');
+    }
+
+    // ── Init ──
+    loadCase(); loadDocs(); loadDeadlines(); loadActivity();
+  </script>
+</body>
+</html>

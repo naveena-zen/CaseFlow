@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case View – CaseFlow</title>
+  <meta name="description" content="View your case details, documents, deadlines, and activity timeline on CaseFlow." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; margin: 0; }
+    .cf-nav {
+      background: linear-gradient(135deg, #0f2044, #2a5298);
+      padding: .9rem 1.5rem; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.18);
+    }
+    .cf-nav-brand { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; display: flex; align-items: center; gap: .5rem; }
+    .cf-nav-brand:hover { color: rgba(255,255,255,.85); }
+    .btn-nav-logout { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 8px; font-size: .82rem; padding: .4rem .9rem; cursor: pointer; }
+    .btn-nav-logout:hover { background: rgba(255,255,255,.22); }
+    .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+    .cf-nav-right { display: flex; align-items: center; gap: .75rem; }
+    @media(max-width:640px) {
+      .hamburger { display: block; }
+      .cf-nav-right { display: none; flex-direction: column; align-items: flex-start; width: 100%; margin-top: .75rem; }
+      .cf-nav-right.open { display: flex; }
+      .cf-nav { flex-wrap: wrap; }
+    }
+
+    .cf-main { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+    .section-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .section-title { font-weight: 700; font-size: 1rem; border-left: 4px solid #2a5298; padding-left: .75rem; margin-bottom: 1.25rem; color: #212529; }
+
+    .doc-item { display: flex; align-items: center; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid #f0f4f8; }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .doc-meta { flex: 1; min-width: 0; }
+    .doc-name { font-weight: 600; font-size: .9rem; word-break: break-all; }
+    .doc-info { font-size: .75rem; color: #6c757d; }
+    .version-badge { background: #f0f4f8; color: #495057; font-size: .7rem; border-radius: 6px; padding: .15rem .45rem; font-weight: 600; }
+    .btn-sm-dl { font-size: .75rem; background: #eaf0ff; color: #2a5298; border: 1px solid #c5d5f5; border-radius: 7px; padding: .3rem .65rem; text-decoration: none; transition: background .15s; }
+    .btn-sm-dl:hover { background: #c5d5f5; }
+
+    .deadline-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid #f0f4f8; }
+    .deadline-item:last-child { border-bottom: none; }
+    .deadline-meta { flex: 1; }
+    .deadline-title-txt { font-weight: 600; font-size: .875rem; }
+    .deadline-date-txt  { font-size: .75rem; color: #6c757d; }
+
+    /* Activity Timeline */
+    .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 1rem; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #2a5298, #e9ecef); }
+    .timeline-item { display: flex; gap: 1rem; padding-bottom: 1.25rem; position: relative; }
+    .timeline-dot { width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; z-index: 1; background: #eaf0ff; border: 2px solid #2a5298; }
+    .timeline-content { flex: 1; min-width: 0; }
+    .timeline-action { font-weight: 600; font-size: .875rem; }
+    .timeline-meta { font-size: .72rem; color: #adb5bd; margin-top: .2rem; }
+
+    .empty-state { text-align: center; padding: 2rem 1rem; color: #adb5bd; }
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .empty-state p { font-size: .85rem; margin: 0; }
+  </style>
+</head>
+<body>
+  <nav class="cf-nav">
+    <a href="/pages/client-dashboard.html" class="cf-nav-brand">
+      <i class="bi bi-arrow-left"></i> ⚖️ CaseFlow
+    </a>
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="cf-nav-right" id="navRight">
+      <button class="btn-nav-logout" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+    </div>
+  </nav>
+
+  <div class="cf-main">
+    <!-- Case Info -->
+    <div class="section-card">
+      <div class="section-title">Case Information</div>
+      <div id="caseInfo">
+        <div class="cf-skeleton mb-3" style="height:1.5rem;width:55%;border-radius:8px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+        <div class="cf-skeleton mb-2" style="height:1rem;width:80%;border-radius:6px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="section-card">
+      <div class="section-title">Documents</div>
+      <div id="docsList">
+        <div class="cf-skeleton mb-2" style="height:3rem;border-radius:10px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Deadlines -->
+    <div class="section-card">
+      <div class="section-title">Deadlines</div>
+      <div id="deadlinesList">
+        <div class="cf-skeleton mb-2" style="height:2.5rem;border-radius:8px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Activity Timeline (read-only for clients) -->
+    <div class="section-card">
+      <div class="section-title">Activity Timeline</div>
+      <ul class="timeline" id="activityTimeline">
+        <li class="timeline-item">
+          <div class="timeline-dot">⌛</div>
+          <div class="timeline-content"><div class="cf-skeleton" style="height:.9rem;width:60%;border-radius:5px;background:linear-gradient(90deg,#e8ecf0 25%,#d4dae2 50%,#e8ecf0 75%);background-size:400% 100%;animation:cfShimmer 1.4s ease infinite"></div></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    if (!requireAuth('client')) throw new Error('Not authorized');
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navRight').classList.toggle('open');
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const caseId = params.get('id');
+    if (!caseId) { showToast('No case ID specified.', 'error'); setTimeout(() => window.location.href = '/pages/client-dashboard.html', 1500); }
+
+    const actionIcons = {
+      CASE_CREATED: '🗂️', STATUS_CHANGE: '🔄', DOCUMENT_UPLOAD: '📎',
+      DOCUMENT_VERSION_UPLOAD: '📌', DOCUMENT_DELETED: '🗑️',
+      DEADLINE_CREATED: '📅', DEADLINE_UPDATED: '✏️', DEADLINE_DELETED: '🗑️'
+    };
+
+    async function loadCase() {
+      const res = await fetch(`/api/cases/${caseId}`, { headers: authHeaders() });
+      if (!res.ok) { showToast('Failed to load case.', 'error'); return; }
+      const c = await res.json();
+      document.title = c.title + ' – CaseFlow';
+      document.getElementById('caseInfo').innerHTML = `
+        <div class="row">
+          <div class="col-md-8">
+            <h2 class="fs-5 fw-bold mb-1">${c.title}</h2>
+            <p class="text-muted mb-2" style="font-size:.875rem">${c.description || 'No description provided.'}</p>
+            <div style="font-size:.85rem;color:#495057">
+              <div><strong>Your Lawyer:</strong> ${c.lawyerId ? c.lawyerId.name + ' &lt;' + c.lawyerId.email + '&gt;' : '—'}</div>
+              <div class="mt-1"><strong>Opened:</strong> ${new Date(c.createdAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+          <div class="col-md-4 d-flex flex-column align-items-md-end mt-3 mt-md-0">
+            <div class="fw-semibold small mb-1 text-muted">Case Status</div>
+            ${statusBadge(c.status)}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadDocs() {
+      const res  = await fetch(`/api/documents/${caseId}`, { headers: authHeaders() });
+      const docs = await res.json();
+      const el   = document.getElementById('docsList');
+      if (!docs.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">📁</div><p>No documents uploaded yet.</p></div>`; return; }
+      el.innerHTML = docs.map(d => {
+        const ext = d.originalName.split('.').pop().toLowerCase();
+        const icons = { pdf:'📕', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', doc:'📘', docx:'📘', txt:'📄' };
+        return `<div class="doc-item">
+          <div class="doc-icon">${icons[ext] || '📄'}</div>
+          <div class="doc-meta">
+            <div class="doc-name">${d.originalName} <span class="version-badge">v${d.version}</span></div>
+            <div class="doc-info">Updated ${new Date(d.updatedAt).toLocaleDateString()}</div>
+          </div>
+          <a href="/api/documents/download/${d._id}" class="btn-sm-dl" target="_blank"><i class="bi bi-download me-1"></i>Download</a>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadDeadlines() {
+      const res       = await fetch(`/api/deadlines/${caseId}`, { headers: authHeaders() });
+      const deadlines = await res.json();
+      const el        = document.getElementById('deadlinesList');
+      if (!deadlines.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><p>No deadlines set yet.</p></div>`; return; }
+      el.innerHTML = deadlines.map(d => {
+        const daysLeft = Math.ceil((new Date(d.dueDate) - new Date()) / 86400000);
+        const urgency  = daysLeft <= 1 ? '🔴' : daysLeft <= 3 ? '🟡' : '🟢';
+        return `<div class="deadline-item">
+          <div style="font-size:1.2rem">${urgency}</div>
+          <div class="deadline-meta">
+            <div class="deadline-title-txt">${d.title}</div>
+            <div class="deadline-date-txt">${new Date(d.dueDate).toLocaleDateString()} · ${daysLeft < 0 ? '<span style="color:#e74c3c">Overdue</span>' : daysLeft === 0 ? '<span style="color:#e74c3c">Due today!</span>' : daysLeft + 'd left'}</div>
+          </div>
+          <span class="badge ${daysLeft <= 1 ? 'bg-danger' : daysLeft <= 3 ? 'bg-warning text-dark' : 'bg-success'}" style="font-size:.72rem">${new Date(d.dueDate).toLocaleDateString()}</span>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadActivity() {
+      const res  = await fetch(`/api/cases/${caseId}/activity`, { headers: authHeaders() });
+      const logs = await res.json();
+      const el   = document.getElementById('activityTimeline');
+      if (!Array.isArray(logs) || !logs.length) {
+        el.innerHTML = `<li><div class="empty-state"><div class="empty-icon">📋</div><p>No activity recorded yet.</p></div></li>`;
+        return;
+      }
+      el.innerHTML = logs.map(log => `
+        <li class="timeline-item">
+          <div class="timeline-dot">${actionIcons[log.action] || '•'}</div>
+          <div class="timeline-content">
+            <div class="timeline-action">${log.description}</div>
+            <div class="timeline-meta">by ${log.userId?.name || 'Unknown'} · ${new Date(log.createdAt).toLocaleString()}</div>
+          </div>
+        </li>
+      `).join('');
+    }
+
+    loadCase(); loadDocs(); loadDeadlines(); loadActivity();
+  </script>
+</body>
+</html>

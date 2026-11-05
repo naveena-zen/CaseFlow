@@ -1,0 +1,18 @@
+# Environment variables
+.env
+*.env
+
+# Dependencies
+node_modules/
+
+# Uploaded files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Build and coverage outputs
+dist/
+coverage/
+
+# OS metadata files
+.DS_Store
+Thumbs.db
